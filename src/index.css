@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --toast-bg: #ffffff;
+  --toast-color: #171717;
+}
+
+.dark {
+  --toast-bg: #262626;
+  --toast-color: #fafafa;
+}
