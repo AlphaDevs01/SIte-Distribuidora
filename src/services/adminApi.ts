@@ -278,19 +278,21 @@ export class AdminApiService {
   }
 
   static async updateStoreSettings(settings: Partial<StoreSettings>): Promise<void> {
+    // Apenas campos válidos e snake_case
+    const updateData: any = {};
+    if (settings.storeName !== undefined) updateData.store_name = settings.storeName;
+    if (settings.storeAddress !== undefined) updateData.store_address = settings.storeAddress;
+    if (settings.storePhone !== undefined) updateData.store_phone = settings.storePhone;
+    if (settings.storeEmail !== undefined) updateData.store_email = settings.storeEmail;
+    if (settings.logoUrl !== undefined) updateData.logo_url = settings.logoUrl;
+    if (settings.baseDeliveryFee !== undefined) updateData.base_delivery_fee = settings.baseDeliveryFee;
+    if (settings.minimumOrderValue !== undefined) updateData.minimum_order_value = settings.minimumOrderValue;
+    if (settings.deliveryRadiusKm !== undefined) updateData.delivery_radius_km = settings.deliveryRadiusKm;
+    updateData.updated_at = new Date().toISOString();
+
     const { error } = await supabase
       .from('store_settings')
-      .update({
-        store_name: settings.storeName,
-        store_address: settings.storeAddress,
-        store_phone: settings.storePhone,
-        store_email: settings.storeEmail,
-        logo_url: settings.logoUrl,
-        base_delivery_fee: settings.baseDeliveryFee,
-        minimum_order_value: settings.minimumOrderValue,
-        delivery_radius_km: settings.deliveryRadiusKm,
-        updated_at: new Date().toISOString(),
-      });
+      .update(updateData);
 
     if (error) throw error;
   }

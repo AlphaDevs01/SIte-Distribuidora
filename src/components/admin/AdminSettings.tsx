@@ -55,10 +55,20 @@ const AdminSettings: React.FC = () => {
   const onSubmit = async (data: SettingsForm) => {
     setSaving(true);
     try {
-      await AdminApiService.updateStoreSettings(data);
+      // Envie apenas os campos necessários
+      await AdminApiService.updateStoreSettings({
+        storeName: data.storeName,
+        storeAddress: data.storeAddress,
+        storePhone: data.storePhone,
+        storeEmail: data.storeEmail,
+        logoUrl: data.logoUrl,
+        baseDeliveryFee: data.baseDeliveryFee,
+        minimumOrderValue: data.minimumOrderValue,
+        deliveryRadiusKm: data.deliveryRadiusKm,
+      });
       toast.success('Configurações salvas com sucesso!');
       fetchSettings();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving settings:', error);
       toast.error('Erro ao salvar configurações');
     } finally {
