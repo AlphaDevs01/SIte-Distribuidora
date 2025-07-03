@@ -8,6 +8,7 @@ import Cart from './components/Cart';
 import FloatingCartButton from './components/FloatingCartButton';
 import Checkout from './components/Checkout';
 import OrderConfirmation from './components/OrderConfirmation';
+import CustomerOrders from './pages/CustomerOrders'; // Import the new component
 
 // Admin Components
 import AdminLogin from './components/admin/AdminLogin';
@@ -48,9 +49,10 @@ function App() {
                   <Route path="/" element={<ProductGrid />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+                  <Route path="/my-orders" element={<CustomerOrders />} /> {/* Add the new route */}
                 </Routes>
               </main>
-              
+
               {/* Overlays */}
               <FilterSidebar />
               <Cart />
@@ -58,7 +60,7 @@ function App() {
             </>
           } />
         </Routes>
-        
+
         {/* Toast notifications */}
         <Toaster
           position="top-right"

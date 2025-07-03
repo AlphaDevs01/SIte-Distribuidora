@@ -10,7 +10,7 @@ export class ApiService {
         *,
         distributors!inner(name)
       `)
-      .gt('stock', 0); // Corrigido aqui
+      .gt('stock', 0);
 
     if (error) {
       console.error('Error fetching products:', error);
@@ -44,7 +44,7 @@ export class ApiService {
         distributors!inner(name)
       `)
       .eq('featured', true)
-      .gt('stock', 0) // Corrigido aqui
+      .gt('stock', 0)
       .limit(8);
 
     if (error) {
@@ -173,8 +173,14 @@ export class ApiService {
       return null;
     }
 
+    if (!data) return null;
+
     return {
       id: data.id,
+      customerName: data.customer_name,
+      customerEmail: data.customer_email,
+      customerPhone: data.customer_phone,
+      deliveryAddress: data.delivery_address,
       items: data.order_items.map((item: any) => ({
         product: {
           id: item.products.id,
@@ -196,12 +202,69 @@ export class ApiService {
         quantity: item.quantity,
       })),
       total: data.total_amount,
-      deliveryAddress: data.delivery_address,
+      deliveryFee: data.delivery_fee,
       paymentMethod: data.payment_method as any,
       distributorId: data.distributor_id,
       status: data.status as any,
       createdAt: new Date(data.created_at),
-      estimatedDelivery: new Date(Date.now() + 45 * 60 * 1000), // 45 minutes from now
+      estimatedDelivery: new Date(Date.now() + 45 * 60 * 1000), // Placeholder
     };
+  }
+
+  // New function to get orders by customer email
+  static async getOrdersByEmail(email: string): Promise<Order[]> {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        order_items(
+          *,
+          products(*)
+        ),
+        distributors(name)
+      `)
+      .eq('customer_email', email.toLowerCase()); // Case-insensitive search
+
+    if (error) {
+      console.error('Error fetching orders by email:', error);
+      throw error;
+    }
+
+    if (!data) return [];
+
+    return data.map((order: any) => ({
+      id: order.id,
+      customerName: order.customer_name,
+      customerEmail: order.customer_email,
+      customerPhone: order.customer_phone,
+      deliveryAddress: order.delivery_address,
+      items: order.order_items.map((item: any) => ({
+        product: {
+          id: item.products.id,
+          name: item.products.name,
+          description: item.products.description,
+          price: item.unit_price,
+          originalPrice: item.products.original_price,
+          imageUrl: item.products.image_url,
+          category: item.products.category,
+          volume: item.products.volume,
+          alcoholContent: item.products.alcohol_content,
+          brand: item.products.brand,
+          distributorId: item.products.distributor_id,
+          distributorName: order.distributors.name,
+          stock: item.products.stock,
+          featured: item.products.featured,
+          tags: item.products.tags,
+        },
+        quantity: item.quantity,
+      })),
+      total: order.total_amount,
+      deliveryFee: order.delivery_fee,
+      paymentMethod: order.payment_method as any,
+      distributorId: order.distributor_id,
+      status: order.status as any,
+      createdAt: new Date(order.created_at),
+      estimatedDelivery: new Date(Date.now() + 45 * 60 * 1000), // Placeholder
+    }));
   }
 }

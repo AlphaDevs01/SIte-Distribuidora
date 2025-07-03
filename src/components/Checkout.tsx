@@ -45,10 +45,15 @@ const Checkout: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    
+
+    // Clean and format phone number: remove non-digits and add 55 prefix if not present
+    const cleanedPhone = data.customerPhone.replace(/\D/g, '');
+    const formattedPhone = cleanedPhone.startsWith('55') ? cleanedPhone : `55${cleanedPhone}`;
+
     try {
       const orderId = await ApiService.createOrder({
         ...data,
+        customerPhone: formattedPhone, // Use the formatted phone number
         items,
         distributorId: mainDistributorId,
         deliveryFee,
@@ -109,7 +114,7 @@ const Checkout: React.FC = () => {
               <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
                 Informações Pessoais
               </h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
@@ -130,7 +135,7 @@ const Checkout: React.FC = () => {
                     Email
                   </label>
                   <input
-                    {...register('customerEmail', { 
+                    {...register('customerEmail', {
                       required: 'Email é obrigatório',
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -148,13 +153,19 @@ const Checkout: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Telefone
+                    Telefone (com DDD, apenas números)
                   </label>
                   <input
-                    {...register('customerPhone', { required: 'Telefone é obrigatório' })}
+                    {...register('customerPhone', {
+                      required: 'Telefone é obrigatório',
+                      pattern: {
+                        value: /^\d+$/,
+                        message: 'Apenas números são permitidos'
+                      }
+                    })}
                     type="tel"
                     className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="(11) 99999-9999"
+                    placeholder="11999999999"
                   />
                   {errors.customerPhone && (
                     <p className="text-red-500 text-sm mt-1">{errors.customerPhone.message}</p>
@@ -169,7 +180,7 @@ const Checkout: React.FC = () => {
                 <MapPin className="h-5 w-5 mr-2" />
                 Endereço de Entrega
               </h3>
-              
+
               <div>
                 <textarea
                   {...register('deliveryAddress', { required: 'Endereço é obrigatório' })}
@@ -188,11 +199,11 @@ const Checkout: React.FC = () => {
               <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
                 Forma de Pagamento
               </h3>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <label className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                  paymentMethod === 'credit' 
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' 
+                  paymentMethod === 'credit'
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
                     : 'border-neutral-300 dark:border-neutral-600 hover:border-neutral-400'
                 }`}>
                   <input
@@ -206,8 +217,8 @@ const Checkout: React.FC = () => {
                 </label>
 
                 <label className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                  paymentMethod === 'debit' 
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' 
+                  paymentMethod === 'debit'
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
                     : 'border-neutral-300 dark:border-neutral-600 hover:border-neutral-400'
                 }`}>
                   <input
@@ -221,8 +232,8 @@ const Checkout: React.FC = () => {
                 </label>
 
                 <label className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                  paymentMethod === 'pix' 
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' 
+                  paymentMethod === 'pix'
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
                     : 'border-neutral-300 dark:border-neutral-600 hover:border-neutral-400'
                 }`}>
                   <input
@@ -236,8 +247,8 @@ const Checkout: React.FC = () => {
                 </label>
 
                 <label className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                  paymentMethod === 'cash' 
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' 
+                  paymentMethod === 'cash'
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
                     : 'border-neutral-300 dark:border-neutral-600 hover:border-neutral-400'
                 }`}>
                   <input
@@ -270,7 +281,7 @@ const Checkout: React.FC = () => {
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
             Resumo do Pedido
           </h3>
-          
+
           <div className="space-y-4 mb-6">
             {items.map((item) => (
               <div key={item.product.id} className="flex items-center space-x-3">

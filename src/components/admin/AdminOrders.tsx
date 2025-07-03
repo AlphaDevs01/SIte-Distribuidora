@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Search, 
-  Filter, 
-  Eye, 
-  Clock, 
-  CheckCircle, 
-  Truck, 
+import {
+  Search,
+  Filter,
+  Eye,
+  Clock,
+  CheckCircle,
+  Truck,
   Package,
   X,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  MessageCircle, // Added MessageCircle icon
 } from 'lucide-react';
 import { AdminApiService } from '../../services/adminApi';
 import { Order } from '../../types';
@@ -129,6 +130,42 @@ const AdminOrders: React.FC = () => {
     setShowModal(true);
   };
 
+  const enviarMensagemWhatsApp = (order: Order) => {
+    if (!order.customerPhone) {
+      toast.error('Número de telefone do cliente não disponível.');
+      return;
+    }
+
+    // Ensure phone number is digits only and has 55 prefix
+    const phoneNumber = order.customerPhone.replace(/\D/g, '');
+    const formattedPhoneNumber = phoneNumber.startsWith('55') ? phoneNumber : `55${phoneNumber}`;
+
+
+    const itemsList = order.items.map(item =>
+      `- ${item.quantity}x ${item.product.name}`
+    ).join('\n');
+
+    const message = `Olá, ${order.customerName || 'Cliente'}! 🍻
+Recebemos seu pedido #${order.id.slice(-8).toUpperCase()}.
+
+🧾 Itens:
+${itemsList}
+
+📍 Endereço:
+${order.deliveryAddress}
+
+💰 Pagamento: ${getPaymentMethodText(order.paymentMethod)}
+💵 Total: R$ ${order.total.toFixed(2)}
+
+Seu pedido está em preparo e logo será entregue. 🚚
+Obrigado por comprar com a gente!`;
+
+    const whatsappUrl = `https://wa.me/${formattedPhoneNumber}?text=${encodeURIComponent(message)}`;
+
+    window.open(whatsappUrl, '_blank');
+  };
+
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -217,7 +254,7 @@ const AdminOrders: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                          #{order.id.slice(-8)}
+                          #{order.id.slice(-8).toUpperCase()}
                         </p>
                         <p className="text-sm text-neutral-500 dark:text-neutral-400">
                           {order.items.length} {order.items.length === 1 ? 'item' : 'itens'}
@@ -255,17 +292,26 @@ const AdminOrders: React.FC = () => {
                         {order.createdAt.toLocaleDateString('pt-BR')}
                       </p>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                        {order.createdAt.toLocaleTimeString('pt-BR', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
+                        {order.createdAt.toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit'
                         })}
                       </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
+                         {/* WhatsApp Button */}
+                         <button
+                          onClick={() => enviarMensagemWhatsApp(order)}
+                          className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
+                          title="Enviar mensagem no WhatsApp"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => viewOrderDetails(order)}
                           className="text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-300"
+                          title="Ver detalhes do pedido"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -299,7 +345,7 @@ const AdminOrders: React.FC = () => {
           <div className="bg-white dark:bg-neutral-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-                Detalhes do Pedido #{selectedOrder.id.slice(-8)}
+                Detalhes do Pedido #{selectedOrder.id.slice(-8).toUpperCase()}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -315,7 +361,7 @@ const AdminOrders: React.FC = () => {
                 <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                   Informações do Cliente
                 </h3>
-                
+
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/20 rounded-full flex items-center justify-center">
@@ -341,6 +387,14 @@ const AdminOrders: React.FC = () => {
                     <Phone className="h-5 w-5 text-neutral-400" />
                     <span className="text-neutral-700 dark:text-neutral-300">
                       {selectedOrder.customerPhone}
+                       {/* WhatsApp Button in Modal */}
+                       <button
+                          onClick={() => enviarMensagemWhatsApp(selectedOrder)}
+                          className="ml-2 text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
+                          title="Enviar mensagem no WhatsApp"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </button>
                     </span>
                   </div>
 
@@ -358,7 +412,7 @@ const AdminOrders: React.FC = () => {
                 <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                   Informações do Pedido
                 </h3>
-                
+
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-neutral-600 dark:text-neutral-400">Status:</span>
@@ -396,7 +450,7 @@ const AdminOrders: React.FC = () => {
               <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
                 Itens do Pedido
               </h3>
-              
+
               <div className="space-y-3">
                 {selectedOrder.items.map((item) => (
                   <div key={item.product.id} className="flex items-center space-x-4 p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
