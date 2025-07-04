@@ -17,7 +17,7 @@ interface AppStore {
 export const useAppStore = create<AppStore>()(
   persist(
     (set, get) => ({
-      isDarkMode: true, // dark mode padrão
+      isDarkMode: false, // Mude para false!
       filters: {},
       searchQuery: '',
       showFilters: false,
