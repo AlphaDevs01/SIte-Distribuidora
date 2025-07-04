@@ -87,7 +87,7 @@ CREATE POLICY "Store settings are updatable by admins"
 
 -- Insert default admin user (password: admin123)
 INSERT INTO admin_users (email, password_hash, name, role) VALUES
-('admin@Gonçalves Distribuidora de bebidas 24hrs.com', '$2b$10$rOzJqQZQZQZQZQZQZQZQZOzJqQZQZQZQZQZQZQZQZOzJqQZQZQZQZQ', 'Administrador', 'admin');
+('admin@drinkup.com', '$2b$10$rOzJqQZQZQZQZQZQZQZQZOzJqQZQZQZQZQZQZQZQZOzJqQZQZQZQZQ', 'Administrador', 'admin');
 
 -- Insert default store settings
 INSERT INTO store_settings (store_name, store_address, store_phone, store_email) VALUES

@@ -5,40 +5,38 @@ import { Product, Order } from '../types';
 export class AdminApiService {
   // Authentication
   static async login(email: string, password: string): Promise<AdminUser | null> {
-    try {
-      // In a real app, you'd verify password hash
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', email)
-        .eq('is_active', true)
-        .single();
-
-      if (error || !data) {
-        throw new Error('Invalid credentials');
-      }
-
-      // Store admin session
-      localStorage.setItem('admin_token', JSON.stringify({
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        role: data.role,
-        expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-      }));
-
-      return {
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        role: data.role,
-        isActive: data.is_active,
-        createdAt: new Date(data.created_at),
-      };
-    } catch (error) {
+    // Login via Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.session) {
       console.error('Login error:', error);
       return null;
     }
+    // Agora você está autenticado, pode buscar dados do admin
+    const { data: admin, error: adminError } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('email', email)
+      .eq('is_active', true)
+      .single();
+    if (adminError || !admin) return null;
+
+    // Store admin session
+    localStorage.setItem('admin_token', JSON.stringify({
+      id: admin.id,
+      email: admin.email,
+      name: admin.name,
+      role: admin.role,
+      expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+    }));
+
+    return {
+      id: admin.id,
+      email: admin.email,
+      name: admin.name,
+      role: admin.role,
+      isActive: admin.is_active,
+      createdAt: new Date(admin.created_at),
+    };
   }
 
   static logout(): void {
@@ -66,10 +64,7 @@ export class AdminApiService {
   static async getProducts(): Promise<Product[]> {
     const { data, error } = await supabase
       .from('products')
-      .select(`
-        *,
-        distributors!inner(name)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -85,8 +80,6 @@ export class AdminApiService {
       volume: product.volume,
       alcoholContent: product.alcohol_content,
       brand: product.brand,
-      distributorId: product.distributor_id,
-      distributorName: product.distributors.name,
       stock: product.stock,
       featured: product.featured,
       tags: product.tags,
@@ -106,7 +99,6 @@ export class AdminApiService {
         volume: productData.volume,
         alcohol_content: productData.alcoholContent,
         brand: productData.brand,
-        distributor_id: productData.distributorId,
         stock: productData.stock,
         featured: productData.featured,
         tags: productData.tags,
@@ -156,8 +148,7 @@ export class AdminApiService {
         order_items(
           *,
           products(*)
-        ),
-        distributors(name)
+        )
       `)
       .order('created_at', { ascending: false });
 
@@ -177,8 +168,6 @@ export class AdminApiService {
           volume: item.products.volume,
           alcoholContent: item.products.alcohol_content,
           brand: item.products.brand,
-          distributorId: item.products.distributor_id,
-          distributorName: order.distributors.name,
           stock: item.products.stock,
           featured: item.products.featured,
           tags: item.products.tags,
@@ -188,7 +177,6 @@ export class AdminApiService {
       total: order.total_amount,
       deliveryAddress: order.delivery_address,
       paymentMethod: order.payment_method as any,
-      distributorId: order.distributor_id,
       status: order.status as any,
       createdAt: new Date(order.created_at),
       estimatedDelivery: new Date(Date.now() + 45 * 60 * 1000),
@@ -290,9 +278,13 @@ export class AdminApiService {
     if (settings.deliveryRadiusKm !== undefined) updateData.delivery_radius_km = settings.deliveryRadiusKm;
     updateData.updated_at = new Date().toISOString();
 
+    // Corrigir: garantir que settings.id está presente e usar .eq('id', settings.id)
+    if (!settings.id) throw new Error('ID das configurações da loja não informado.');
+
     const { error } = await supabase
       .from('store_settings')
-      .update(updateData);
+      .update(updateData)
+      .eq('id', settings.id);
 
     if (error) throw error;
   }

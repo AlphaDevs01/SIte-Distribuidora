@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, CreditCard, Smartphone, DollarSign, MapPin } from 'lucide-react';
 import { useCartStore } from '../store/cartStore';
-import { useDistributors } from '../hooks/useDistributors';
 import { ApiService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { StoreSettings } from '../types/admin';
 
 interface CheckoutForm {
   customerName: string;
@@ -18,32 +18,21 @@ interface CheckoutForm {
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCartStore();
-  const { distributors } = useDistributors();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deliveryFee, setDeliveryFee] = useState(0);
+
+  // Buscar taxa de entrega do store_settings
+  useEffect(() => {
+    ApiService.getStoreSettings?.().then((settings: StoreSettings | null) => {
+      setDeliveryFee(settings?.baseDeliveryFee ?? 0);
+    });
+  }, []);
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<CheckoutForm>();
-
   const paymentMethod = watch('paymentMethod');
-
-  // Get the main distributor (most items from)
-  const distributorCounts = items.reduce((acc, item) => {
-    acc[item.product.distributorId] = (acc[item.product.distributorId] || 0) + item.quantity;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const mainDistributorId = Object.entries(distributorCounts)
-    .sort(([,a], [,b]) => b - a)[0]?.[0];
-
-  const mainDistributor = distributors.find(d => d.id === mainDistributorId);
-  const deliveryFee = mainDistributor?.deliveryFee || 0;
   const totalAmount = getTotalPrice() + deliveryFee;
 
   const onSubmit = async (data: CheckoutForm) => {
-    if (!mainDistributorId) {
-      toast.error('Erro: Distribuidora não encontrada');
-      return;
-    }
-
     setIsSubmitting(true);
 
     // Clean and format phone number: remove non-digits and add 55 prefix if not present
@@ -53,9 +42,8 @@ const Checkout: React.FC = () => {
     try {
       const orderId = await ApiService.createOrder({
         ...data,
-        customerPhone: formattedPhone, // Use the formatted phone number
+        customerPhone: formattedPhone,
         items,
-        distributorId: mainDistributorId,
         deliveryFee,
       });
 
@@ -319,24 +307,6 @@ const Checkout: React.FC = () => {
               <span>R$ {totalAmount.toFixed(2)}</span>
             </div>
           </div>
-
-          {mainDistributor && (
-            <div className="mt-6 p-3 bg-neutral-50 dark:bg-neutral-700 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <img
-                  src={mainDistributor.logo}
-                  alt={mainDistributor.name}
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-                <div>
-                  <p className="font-medium text-sm">{mainDistributor.name}</p>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                    Entrega em {mainDistributor.deliveryTime}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

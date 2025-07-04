@@ -75,7 +75,7 @@ const ProductGrid: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center py-12">
           <div className="text-6xl mb-4">⚠️</div>
-          <h3 className="text-xl font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+          <h3 className="text-xl font-medium text-primary-600 dark:text-neutral-100 mb-2">
             Erro ao carregar produtos
           </h3>
           <p className="text-neutral-500 dark:text-neutral-400">
@@ -91,7 +91,7 @@ const ProductGrid: React.FC = () => {
       {/* Featured Products */}
       {!searchQuery && Object.keys(filters).length === 0 && featuredProducts.length > 0 && (
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
+          <h2 className="text-2xl font-bold text-primary-600 dark:text-yellow-400 mb-6">
             Produtos em Destaque
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -104,10 +104,10 @@ const ProductGrid: React.FC = () => {
 
       {/* Results Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+        <h2 className="text-2xl font-bold text-primary-600 dark:text-yellow-400">
           {searchQuery || Object.keys(filters).length > 0 ? 'Resultados' : 'Todos os Produtos'}
         </h2>
-        <span className="text-sm text-neutral-500 dark:text-neutral-400">
+        <span className="text-sm text-neutral-500 dark:text-yellow-300">
           {filteredProducts.length} produtos encontrados
         </span>
       </div>
@@ -116,7 +116,7 @@ const ProductGrid: React.FC = () => {
       {filteredProducts.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🔍</div>
-          <h3 className="text-xl font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+          <h3 className="text-xl font-medium text-primary-600 dark:text-neutral-100 mb-2">
             Nenhum produto encontrado
           </h3>
           <p className="text-neutral-500 dark:text-neutral-400">

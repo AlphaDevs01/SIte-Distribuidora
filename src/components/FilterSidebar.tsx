@@ -1,7 +1,6 @@
 import React from 'react';
 import { X, Filter, RotateCcw } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
-import { useDistributors } from '../hooks/useDistributors';
 import { ProductCategory } from '../types';
 
 const categories = [
@@ -18,7 +17,6 @@ const categories = [
 
 const FilterSidebar: React.FC = () => {
   const { showFilters, toggleFilters, filters, setFilters, clearFilters } = useAppStore();
-  const { distributors } = useDistributors();
 
   if (!showFilters) return null;
 
@@ -153,40 +151,6 @@ const FilterSidebar: React.FC = () => {
             >
               Acima de R$ 60
             </button>
-          </div>
-        </div>
-
-        {/* Distributors */}
-        <div className="mb-6">
-          <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-3">
-            Distribuidoras
-          </h3>
-          <div className="space-y-2">
-            {distributors.map((distributor) => (
-              <button
-                key={distributor.id}
-                onClick={() => handleDistributorChange(distributor.id)}
-                className={`w-full p-3 rounded-lg border text-left transition-all duration-200 ${
-                  filters.distributorId === distributor.id
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                    : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={distributor.logo}
-                    alt={distributor.name}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                  <div>
-                    <p className="font-medium text-sm">{distributor.name}</p>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                      {distributor.deliveryTime} • R$ {distributor.deliveryFee}
-                    </p>
-                  </div>
-                </div>
-              </button>
-            ))}
           </div>
         </div>
 

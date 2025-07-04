@@ -15,7 +15,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   return (
-    <div className="group bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 overflow-hidden hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-300">
+    <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 overflow-hidden hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-300">
       {/* Product Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
@@ -54,7 +54,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Product Name */}
-        <h3 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-2 line-clamp-2">
+        <h3 className="font-semibold text-neutral-900 dark:text-yellow-400 mb-2 line-clamp-2">
           {product.name}
         </h3>
 
@@ -66,11 +66,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Price */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
+            <span className="text-lg font-bold text-primary-600 dark:text-yellow-400">
               R$ {product.price.toFixed(2)}
             </span>
             {product.originalPrice && (
-              <span className="text-sm text-neutral-500 dark:text-neutral-400 line-through">
+              <span className="text-sm text-neutral-500 dark:text-yellow-200 line-through">
                 R$ {product.originalPrice.toFixed(2)}
               </span>
             )}

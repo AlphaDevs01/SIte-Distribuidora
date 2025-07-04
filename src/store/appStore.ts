@@ -16,14 +16,23 @@ interface AppStore {
 
 export const useAppStore = create<AppStore>()(
   persist(
-    (set) => ({
-      isDarkMode: false,
+    (set, get) => ({
+      isDarkMode: true, // dark mode padrão
       filters: {},
       searchQuery: '',
       showFilters: false,
       
       toggleDarkMode: () => {
-        set((state) => ({ isDarkMode: !state.isDarkMode }));
+        set((state) => {
+          const newDark = !state.isDarkMode;
+          // Sincroniza com <html>
+          if (newDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+          return { isDarkMode: newDark };
+        });
       },
       
       setFilters: (filters) => {
@@ -45,6 +54,13 @@ export const useAppStore = create<AppStore>()(
     {
       name: 'app-storage',
       storage: createJSONStorage(() => localStorage),
+      // Ao reidratar, só ADICIONE a classe dark se isDarkMode for true, nunca remova automaticamente!
+      onRehydrateStorage: () => (state) => {
+        if (state?.isDarkMode) {
+          document.documentElement.classList.add('dark');
+        }
+        // Nunca remova a classe dark aqui!
+      }
     }
   )
 );

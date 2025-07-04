@@ -1,15 +1,12 @@
 import { supabase } from '../lib/supabase';
-import { Product, Distributor, Order, CartItem } from '../types';
+import { Product, Order, CartItem } from '../types';
 
 export class ApiService {
   // Products
   static async getProducts(): Promise<Product[]> {
     const { data, error } = await supabase
       .from('products')
-      .select(`
-        *,
-        distributors!inner(name)
-      `)
+      .select('*')
       .gt('stock', 0);
 
     if (error) {
@@ -28,8 +25,6 @@ export class ApiService {
       volume: product.volume,
       alcoholContent: product.alcohol_content,
       brand: product.brand,
-      distributorId: product.distributor_id,
-      distributorName: product.distributors.name,
       stock: product.stock,
       featured: product.featured,
       tags: product.tags,
@@ -39,10 +34,7 @@ export class ApiService {
   static async getFeaturedProducts(): Promise<Product[]> {
     const { data, error } = await supabase
       .from('products')
-      .select(`
-        *,
-        distributors!inner(name)
-      `)
+      .select('*')
       .eq('featured', true)
       .gt('stock', 0)
       .limit(8);
@@ -63,35 +55,9 @@ export class ApiService {
       volume: product.volume,
       alcoholContent: product.alcohol_content,
       brand: product.brand,
-      distributorId: product.distributor_id,
-      distributorName: product.distributors.name,
       stock: product.stock,
       featured: product.featured,
       tags: product.tags,
-    }));
-  }
-
-  // Distributors
-  static async getDistributors(): Promise<Distributor[]> {
-    const { data, error } = await supabase
-      .from('distributors')
-      .select('*')
-      .eq('is_active', true);
-
-    if (error) {
-      console.error('Error fetching distributors:', error);
-      throw error;
-    }
-
-    return data.map(distributor => ({
-      id: distributor.id,
-      name: distributor.name,
-      logo: distributor.logo_url,
-      rating: distributor.rating,
-      deliveryTime: distributor.delivery_time,
-      minimumOrder: distributor.minimum_order,
-      deliveryFee: distributor.delivery_fee,
-      isActive: distributor.is_active,
     }));
   }
 
@@ -103,7 +69,6 @@ export class ApiService {
     deliveryAddress: string;
     paymentMethod: string;
     items: CartItem[];
-    distributorId: string;
     deliveryFee: number;
   }): Promise<string> {
     const totalAmount = orderData.items.reduce(
@@ -122,7 +87,6 @@ export class ApiService {
         total_amount: totalAmount,
         delivery_fee: orderData.deliveryFee,
         payment_method: orderData.paymentMethod,
-        distributor_id: orderData.distributorId,
         status: 'pending',
       })
       .select()
@@ -162,8 +126,7 @@ export class ApiService {
         order_items(
           *,
           products(*)
-        ),
-        distributors(name)
+        )
       `)
       .eq('id', orderId)
       .single();
@@ -193,8 +156,6 @@ export class ApiService {
           volume: item.products.volume,
           alcoholContent: item.products.alcohol_content,
           brand: item.products.brand,
-          distributorId: item.products.distributor_id,
-          distributorName: data.distributors.name,
           stock: item.products.stock,
           featured: item.products.featured,
           tags: item.products.tags,
@@ -204,15 +165,14 @@ export class ApiService {
       total: data.total_amount,
       deliveryFee: data.delivery_fee,
       paymentMethod: data.payment_method as any,
-      distributorId: data.distributor_id,
       status: data.status as any,
       createdAt: new Date(data.created_at),
       estimatedDelivery: new Date(Date.now() + 45 * 60 * 1000), // Placeholder
     };
   }
 
-  // New function to get orders by customer email
-  static async getOrdersByEmail(email: string): Promise<Order[]> {
+  // Novo método: buscar pedido pelo short id (últimos 8 caracteres do UUID)
+  static async getOrderByShortId(shortId: string): Promise<Order | null> {
     const { data, error } = await supabase
       .from('orders')
       .select(`
@@ -220,25 +180,29 @@ export class ApiService {
         order_items(
           *,
           products(*)
-        ),
-        distributors(name)
-      `)
-      .eq('customer_email', email.toLowerCase()); // Case-insensitive search
+        )
+      `);
 
     if (error) {
-      console.error('Error fetching orders by email:', error);
-      throw error;
+      console.error('Error fetching orders:', error);
+      return null;
     }
 
-    if (!data) return [];
+    if (!data) return null;
 
-    return data.map((order: any) => ({
-      id: order.id,
-      customerName: order.customer_name,
-      customerEmail: order.customer_email,
-      customerPhone: order.customer_phone,
-      deliveryAddress: order.delivery_address,
-      items: order.order_items.map((item: any) => ({
+    const found = data.find((order: any) =>
+      order.id.slice(-8).toUpperCase() === shortId.toUpperCase()
+    );
+
+    if (!found) return null;
+
+    return {
+      id: found.id,
+      customerName: found.customer_name,
+      customerEmail: found.customer_email,
+      customerPhone: found.customer_phone,
+      deliveryAddress: found.delivery_address,
+      items: found.order_items.map((item: any) => ({
         product: {
           id: item.products.id,
           name: item.products.name,
@@ -250,21 +214,18 @@ export class ApiService {
           volume: item.products.volume,
           alcoholContent: item.products.alcohol_content,
           brand: item.products.brand,
-          distributorId: item.products.distributor_id,
-          distributorName: order.distributors.name,
           stock: item.products.stock,
           featured: item.products.featured,
           tags: item.products.tags,
         },
         quantity: item.quantity,
       })),
-      total: order.total_amount,
-      deliveryFee: order.delivery_fee,
-      paymentMethod: order.payment_method as any,
-      distributorId: order.distributor_id,
-      status: order.status as any,
-      createdAt: new Date(order.created_at),
+      total: found.total_amount,
+      deliveryFee: found.delivery_fee,
+      paymentMethod: found.payment_method as any,
+      status: found.status as any,
+      createdAt: new Date(found.created_at),
       estimatedDelivery: new Date(Date.now() + 45 * 60 * 1000), // Placeholder
-    }));
+    };
   }
 }

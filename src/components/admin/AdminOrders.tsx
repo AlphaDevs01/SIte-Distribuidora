@@ -145,20 +145,27 @@ const AdminOrders: React.FC = () => {
       `- ${item.quantity}x ${item.product.name}`
     ).join('\n');
 
-    const message = `Olá, ${order.customerName || 'Cliente'}! 🍻
-Recebemos seu pedido #${order.id.slice(-8).toUpperCase()}.
+    // Ajuste: emojis juntos ao texto, sem espaços extras antes das linhas
+const message = 
+`Olá, ${order.customerName || 'cliente'}!
 
-🧾 Itens:
+Recebemos seu pedido #${order.id.slice(-8).toUpperCase()}
+
+-----------------------------
+🛒 *Itens:*
 ${itemsList}
 
-📍 Endereço:
+📍 *Endereço:*
 ${order.deliveryAddress}
 
-💰 Pagamento: ${getPaymentMethodText(order.paymentMethod)}
-💵 Total: R$ ${order.total.toFixed(2)}
+💳 *Pagamento:* ${getPaymentMethodText(order.paymentMethod)}
+💰 *Total:* R$ ${order.total.toFixed(2)}
+-----------------------------
 
-Seu pedido está em preparo e logo será entregue. 🚚
-Obrigado por comprar com a gente!`;
+Seu pedido está em preparo e logo será entregue.
+
+Obrigado por comprar com a gente! 💖`;
+
 
     const whatsappUrl = `https://wa.me/${formattedPhoneNumber}?text=${encodeURIComponent(message)}`;
 
